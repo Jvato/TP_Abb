@@ -86,6 +86,9 @@ bool abb_guardar(abb_t *arbol, const char *clave, void *dato){
 /* Si tiene 0 o 1 hijo borra el nodo y devuelve true, encaso contrario devuelve false */
 void *_borrar_con_0_1_hijo(nodo_t **ref) {
         nodo_t *a_borrar = *ref;
+	if (a_borrar == NULL) {
+		return NULL;
+	}
         void *dato= a_borrar->dato;
         if ((*ref)->izq == NULL && (*ref)->der == NULL) {
             *ref = NULL;
@@ -110,27 +113,30 @@ void _intercambiar_nodos(nodo_t *nodoA, nodo_t *nodoB) {
 
 void *_borrar_con_2_hijos(nodo_t **ref) {
 	nodo_t *actual = (*ref);
-	(*ref) = (*ref)->der;
+	if (actual == NULL) {
+		return NULL;
+	}
+	ref = &((*ref)->der);
 	while ( (*ref)->izq != NULL) {
-			(*ref) = (*ref)->izq;
-    }
-    _intercambiar_nodos(actual,*ref);
-    return _borrar_con_0_1_hijo(ref);
+		ref = &((*ref)->izq);
+	}
+	_intercambiar_nodos(actual,*ref);
+	return _borrar_con_0_1_hijo(ref);
 }
 
 void *abb_borrar(abb_t *arbol, const char *clave){
-    void *dato = NULL;
-    nodo_t **ref=_buscar_referencia_nodo(&(arbol->raiz),clave, arbol);
-    if ((*ref) == NULL) {
-        return NULL;
-    }
-    if ((*ref)->izq == NULL || (*ref)->der == NULL) {
-        dato = _borrar_con_0_1_hijo(ref);
-    }
+    	void *dato = NULL;
+	nodo_t **ref=_buscar_referencia_nodo(&(arbol->raiz),clave, arbol);
+    	if ((*ref) == NULL) {
+        	return NULL;
+    	}
+    	if ((*ref)->izq == NULL || (*ref)->der == NULL) {
+        	dato = _borrar_con_0_1_hijo(ref);
+    	}	
 	else {
-		dato = _borrar_con_2_hijos(ref);
-    }
-    return dato;
+	dato = _borrar_con_2_hijos(ref);
+    	}
+    	return dato;
 }
 
 void *abb_obtener(const abb_t *arbol, const char *clave){ 
