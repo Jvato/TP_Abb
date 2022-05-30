@@ -1,5 +1,4 @@
 #include "abb.h"
-#include "hash.h"
 #include "testing.h"
 
 #include <stdio.h>
@@ -25,7 +24,7 @@ static void prueba_crear_abb_vacio()
     abb_destruir(abb);
 }
 
-static void prueba_iterar_hash_vacio()
+static void prueba_iterar_abb_vacio()
 {
     abb_t* abb = abb_crear(strcmp, NULL);
     abb_iter_t* iter = abb_iter_in_crear(abb);
@@ -56,7 +55,7 @@ static void prueba_abb_insertar()
     print_test("Prueba abb borrar clave1, es valor1", abb_borrar(abb, clave1) == valor1);
     print_test("Prueba abb la cantidad de elementos es 0", abb_cantidad(abb) == 0);
 
-    /* Inserta otros 2 valores y no los borra (se destruyen con el hash) */
+    /* Inserta otros 2 valores y no los borra (se destruyen con el abb) */
     print_test("Prueba abb insertar clave2", abb_guardar(abb, clave2, valor2));
     print_test("Prueba abb la cantidad de elementos es 1", abb_cantidad(abb) == 1);
     print_test("Prueba abb obtener clave2 es valor2", abb_obtener(abb, clave2) == valor2);
@@ -213,7 +212,7 @@ static void prueba_abb_volumen(size_t largo, bool debug)
 
     unsigned* valores[largo];
 
-    /* Inserta 'largo' parejas en el hash */
+    /* Inserta 'largo' parejas en el abb */
     bool ok = true;
     for (unsigned i = 0; i < largo; i++) {
         valores[i] = malloc(sizeof(int));
@@ -243,8 +242,8 @@ static void prueba_abb_volumen(size_t largo, bool debug)
         if (!ok) break;
     }
 
-    if (debug) print_test("Prueba hash borrar muchos elementos", ok);
-    if (debug) print_test("Prueba hash la cantidad de elementos es 0", abb_cantidad(abb) == 0);
+    if (debug) print_test("Prueba abb borrar muchos elementos", ok);
+    if (debug) print_test("Prueba abb la cantidad de elementos es 0", abb_cantidad(abb) == 0);
 
     /* Destruye el abb y crea uno nuevo que sí libera */
     abb_destruir(abb);
@@ -260,7 +259,7 @@ static void prueba_abb_volumen(size_t largo, bool debug)
     free(claves);
 
     /* Destruye el abb - debería liberar los enteros */
-    hash_destruir(abb);
+    abb_destruir(abb);
 }
 
 static ssize_t buscar(const char* clave, char* claves[], size_t largo)
@@ -323,7 +322,7 @@ static void prueba_abb_iterar()
     abb_destruir(abb);
 }
 
-static void prueba_hash_iterar_volumen(size_t largo)
+static void prueba_abb_iterar_volumen(size_t largo)
 {
     abb_t* abb = abb_crear(strcmp, NULL);
 
@@ -343,7 +342,7 @@ static void prueba_hash_iterar_volumen(size_t largo)
 
     // Prueba de iteración sobre las claves almacenadas.
     abb_iter_t* iter = abb_iter_crear(abb);
-    print_test("Prueba hash iterador esta al final, es false", !abb_iter_in_al_final(iter));
+    print_test("Prueba abb iterador esta al final, es false", !abb_iter_in_al_final(iter));
 
     ok = true;
     unsigned i;
@@ -395,7 +394,7 @@ void pruebas_abb_catedra()
 {
     /* Ejecuta todas las pruebas unitarias. */
     prueba_crear_abb_vacio();
-    prueba_iterar_hash_vacio();
+    prueba_iterar_abb_vacio();
     prueba_abb_insertar();
     prueba_abb_reemplazar();
     prueba_abb_reemplazar_con_destruir();
@@ -404,7 +403,7 @@ void pruebas_abb_catedra()
     prueba_abb_valor_null();
     prueba_abb_volumen(5000, true);
     prueba_abb_iterar();
-    prueba_hash_iterar_volumen(5000);
+    prueba_abb_iterar_volumen(5000);
 }
 
 void pruebas_volumen_catedra(size_t largo)
