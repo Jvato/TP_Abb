@@ -15,7 +15,7 @@ static void prueba_crear_abb_vacio()
 {
     abb_t* abb = abb_crear(strcmp, NULL);
 
-    print_test("Prueba abb crear abb vacio", abb == NULL);
+    print_test("Prueba abb crear abb vacio", abb_cantidad(abb) == 0);
     print_test("Prueba abb la cantidad de elementos es 0", abb_cantidad(abb) == 0);
     print_test("Prueba abb obtener clave A, es NULL, no existe", !abb_obtener(abb, "A"));
     print_test("Prueba abb pertenece clave A, es false, no existe", !abb_pertenece(abb, "A"));
@@ -212,12 +212,33 @@ static void prueba_abb_volumen(size_t largo, bool debug)
 
     unsigned* valores[largo];
 
-    /* Inserta 'largo' parejas en el abb */
-    bool ok = true;
     for (unsigned i = 0; i < largo; i++) {
         valores[i] = malloc(sizeof(int));
         sprintf(claves[i], "%08d", i);
         *valores[i] = i;
+    }
+    // Mezclo el array
+    for (size_t i = 0; i < largo; i++)
+    {
+        size_t indice_random = (size_t)(rand()) % largo;
+        char* clave_temporal = malloc(largo_clave);
+        strcpy(clave_temporal, claves[i]);
+        unsigned* valor_temporal = valores[i];
+        if(i == indice_random){
+            free(clave_temporal);
+            continue;
+        }
+        strcpy(claves[i], claves[indice_random]);
+        strcpy(claves[indice_random], clave_temporal);
+
+        valores[i] = valores[indice_random];
+        valores[indice_random] = valor_temporal;
+        free(clave_temporal);
+    }
+
+    /* Inserta 'largo' parejas en el abb */
+    bool ok = true;
+    for (unsigned i = 0; i < largo; i++) {
         ok = abb_guardar(abb, claves[i], valores[i]);
         if (!ok) break;
     }
@@ -281,19 +302,16 @@ static void prueba_abb_iterar()
     print_test("Prueba abb insertar clave1", abb_guardar(abb, claves[0], valores[0]));
     print_test("Prueba abb insertar clave2", abb_guardar(abb, claves[1], valores[1]));
     print_test("Prueba abb insertar clave3", abb_guardar(abb, claves[2], valores[2]));
-    printf("Legue aca\n");
 
 
     // Prueba de iteración sobre las claves almacenadas.
     abb_iter_t* iter = abb_iter_in_crear(abb);
-    printf("Legue aca\n");
-    const char *clave;
     ssize_t indice;
 
     print_test("Prueba abb iterador esta al final, es false", !abb_iter_in_al_final(iter));
 
     /* Primer valor */
-    clave = abb_iter_in_ver_actual(iter);
+    const char *clave = abb_iter_in_ver_actual(iter);
     indice = buscar(clave, claves, sizeof(claves) / sizeof(char *));
     print_test("Prueba abb iterador ver actual, es una clave valida", indice != -1);
     print_test("Prueba abb iterador ver actual, no es el mismo puntero", clave != claves[indice]);
@@ -314,17 +332,16 @@ static void prueba_abb_iterar()
     print_test("Prueba abb iterador ver actual, es una clave valida", indice != -1);
     print_test("Prueba abb iterador ver actual, no es el mismo puntero", clave != claves[indice]);
     abb_iter_in_avanzar(iter);
-    print_test("Prueba abb iterador esta al final, es true", abb_iter_in_avanzar(iter));
+    print_test("Prueba abb iterador esta al final, es true", abb_iter_in_avanzar(iter) == false);
 
     /* Vuelve a tratar de avanzar, por las dudas */
     print_test("Prueba abb iterador ver actual, es NULL", !abb_iter_in_ver_actual(iter));
     print_test("Prueba abb iterador avanzar es false", !abb_iter_in_avanzar(iter));
-    print_test("Prueba abb iterador esta al final, es true", abb_iter_in_avanzar(iter));
+    print_test("Prueba abb iterador esta al final, es true", abb_iter_in_al_final(iter));
 
     abb_iter_in_destruir(iter);
     abb_destruir(abb);
 }
-
 
 static void prueba_abb_iterar_volumen(size_t largo)
 {
@@ -335,16 +352,32 @@ static void prueba_abb_iterar_volumen(size_t largo)
 
     size_t valores[largo];
 
-    // for (unsigned i = 0; i < largo; i++) {
-    //     sprintf(claves[i], "%08d", i);
-    //     valores[i] = i;
-    // }
+    for (size_t i = 0; i < largo; i++) {
+        sprintf(claves[i], "%08ld", i);
+        valores[i] = i;
+    }
+    // Mezclo el array
+    for (size_t i = 0; i < largo; i++)
+    {
+        size_t indice_random = (size_t)(rand()) % largo;
+        char* clave_temporal = malloc(largo_clave);
+        strcpy(clave_temporal, claves[i]);
+        size_t valor_temporal = valores[i];
+        if(i == indice_random){
+            free(clave_temporal);
+            continue;
+        }
+        strcpy(claves[i], claves[indice_random]);
+        strcpy(claves[indice_random], clave_temporal);
 
+        valores[i] = valores[indice_random];
+        valores[indice_random] = valor_temporal;
+        free(clave_temporal);
+    }
+    
     /* Inserta 'largo' parejas en el abb */
     bool ok = true;
     for (unsigned i = 0; i < largo; i++) {
-        sprintf(claves[i], "%08d", i);
-        valores[i] = i;
         ok = abb_guardar(abb, claves[i], &valores[i]);
         if (!ok) break;
     }
@@ -394,6 +427,66 @@ static void prueba_abb_iterar_volumen(size_t largo)
     abb_destruir(abb);
 }
 
+bool contar_y_obtener_claves(const char* clave, void* dato, void* extra)
+{
+    int* contador = extra;
+    printf("El %s dice: %s\n", clave, (char*)dato);
+    (*contador)++;
+    return true;
+}
+
+static void prueba_abb_iterar_interno()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+
+    char *clave1 = "perro", *valor1 = "guau";
+    char *clave2 = "gato", *valor2 = "miau";
+    char *clave3 = "bicho", *valor3 = "SIUU";
+
+    print_test("Prueba abb insertar clave1", abb_guardar(abb, clave1, valor1));
+    print_test("Prueba abb insertar clave2", abb_guardar(abb, clave2, valor2));
+    print_test("Prueba abb insertar clave3", abb_guardar(abb, clave3, valor3));
+
+    int numero_de_claves = 0;
+    abb_in_order(abb, contar_y_obtener_claves, &numero_de_claves);
+    print_test("El numero de claves es 3", numero_de_claves == 3);
+    
+    abb_destruir(abb);
+}
+
+bool imprimir_bicho(const char* clave, void* dato, void* extra)
+{
+    if(strcmp(clave, "bicho") == 0){
+        *(int*)extra = 1;
+        printf("%s\n", (char*)dato);
+        return false;
+    }
+    return true;
+}
+
+static void prueba_abb_iterar_interno_con_tope()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+
+    char *clave1 = "perro", *valor1 = "guau";
+    char *clave2 = "gato", *valor2 = "miau";
+    char *clave3 = "bicho", *valor3 = "SIUU";
+    char *clave4 = "oveja", *valor4 = "mee";
+    char *clave5 = "pollito", *valor5 = "pio pio";
+
+    print_test("Prueba abb insertar clave1", abb_guardar(abb, clave1, valor1));
+    print_test("Prueba abb insertar clave2", abb_guardar(abb, clave2, valor2));
+    print_test("Prueba abb insertar clave3", abb_guardar(abb, clave3, valor3));
+    print_test("Prueba abb insertar clave3", abb_guardar(abb, clave4, valor4));
+    print_test("Prueba abb insertar clave3", abb_guardar(abb, clave5, valor5));
+
+    int dijo_lo_suyo = 0;
+    abb_in_order(abb, imprimir_bicho, &dijo_lo_suyo);
+    print_test("El bicho dijo lo suyo", dijo_lo_suyo == 1);
+    
+    abb_destruir(abb);
+}
+
 /* ******************************************************************
  *                        FUNCIÓN PRINCIPAL
  * *****************************************************************/
@@ -413,6 +506,8 @@ void pruebas_abb_catedra()
     prueba_abb_volumen(5000, true);
     prueba_abb_iterar();
     prueba_abb_iterar_volumen(5000);
+    prueba_abb_iterar_interno();
+    prueba_abb_iterar_interno_con_tope();
 }
 
 void pruebas_volumen_catedra(size_t largo)
