@@ -48,16 +48,40 @@ size_t abb_cantidad(const abb_t *arbol);
  */
 void abb_destruir(abb_t *arbol);
 
-
+/*Recorre todo el arbol aplicando la funcion visitar. Si en algun momento el resultado
+ *de aplicar la funcion visitar devuelve false, se deja de iterar sobre el arbol.
+ *Pre: El arbol fue creado
+ *Post: Se le aplico la funcion visitar a la cantidad de objetos deseados
+ */
 void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra);
-
-
 
 
 typedef struct abb_iter abb_iter_t;
 
+/*Crea un iterador
+ *Pre:El arbol fue creado
+ */
 abb_iter_t *abb_iter_in_crear(const abb_t *arbol);
+
+/*Avanza el iterador y devuelve true si se pudo hacer la operacion.
+ *En caso que apunte al final devuelve false
+ *Pre: El iterador fue creado
+ *Post: El iterador apunta al siguiente elemento
+ */
 bool abb_iter_in_avanzar(abb_iter_t *iter);
+
+/*Devuelve la clave actual, esa clave no se puede modificar ni liberar
+ *Pre: El arbol fue creado
+ */
 const char *abb_iter_in_ver_actual(const abb_iter_t *iter);
+
+/*Devuelve true si el iterador esta en el final. En caso contrario devuelve false
+ *Pre: El arbol fue creada
+ */
 bool abb_iter_in_al_final(const abb_iter_t *iter);
+
+/*Destruye el iterador
+ *Pre: El arbol fue creada
+ *Post: El iterador fue destruido
+ */
 void abb_iter_in_destruir(abb_iter_t* iter);
