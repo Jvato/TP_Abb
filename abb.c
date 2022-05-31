@@ -27,7 +27,7 @@ nodo_t* crear_nodo(abb_destruir_dato_t f_destruir, const char *clave, void *dato
     if (nodo->clave == NULL) {
 	    free(nodo);
 	    return NULL;
-	}
+    }
     strcpy(nodo->clave,clave);
     nodo->dato = dato;
     nodo->izq = NULL;
@@ -78,6 +78,9 @@ bool abb_guardar(abb_t *arbol, const char *clave, void *dato){
         arbol->cantidad++;
     }
     else {
+	if (arbol->funcion_destruir != NULL) {
+		arbol->funcion_destruir((*ref)->dato);
+	}
         (*ref)->dato = dato;
     }
     return true;
@@ -175,12 +178,27 @@ void abb_destruir(abb_t *arbol){
     free(arbol);
 }
 
-void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra){
+void _abb_in_order(nodo_t* raiz, bool visitar(const char *, void *, void *), void *extra){
+    if(raiz == NULL){
+        return;
+    }
+    if(visitar){
+        _abb_in_order(raiz->izq, visitar, extra);
+    }
+    visitar(raiz->clave, raiz->dato, extra);
+    if(visitar){
+        _abb_in_order(raiz->der, visitar, extra);
+    }
+}
 
+
+void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra){
+    _abb_in_order(arbol->raiz, visitar, extra);
+    return;
 }
 
 struct abb_iter{
-   abb_t* arbol;
+   const abb_t* arbol;
    pila_t* pila;
 };
 
@@ -201,7 +219,7 @@ abb_iter_t *abb_iter_in_crear(const abb_t *arbol){
    if(iter == NULL){
        return NULL;
    }
-   iter->arbol = (abb_t *)arbol;
+   iter->arbol = arbol;
    iter->pila = pila_crear();
    if(iter->pila == NULL){
        free(iter);
@@ -212,22 +230,24 @@ abb_iter_t *abb_iter_in_crear(const abb_t *arbol){
 }
 
 bool abb_iter_in_avanzar(abb_iter_t *iter){
-   if(abb_iter_in_al_final(iter)){
-       return false;
-    }else{
-       const char* clave = abb_iter_in_ver_actual(iter);
-       nodo_t **ref = _buscar_referencia_nodo(&(iter->arbol->raiz),clave, iter->arbol);
-       pila_desapilar(iter->pila);
-       if(*ref != NULL){
-           pila_apilar(iter->pila, (*ref)->der);
-           apilo_izq(iter, (*ref)->der);
-       }
-       return true;
-   }
+	if(abb_iter_in_al_final(iter)){
+		return false;
+	} 
+	else {
+        nodo_t* nodo_desapilado = pila_desapilar(iter->pila);
+        if(nodo_desapilado->der == NULL){
+            return true;
+        }
+        if(!pila_apilar(iter->pila, nodo_desapilado->der)){
+            return false;
+        }
+        apilo_izq(iter, nodo_desapilado->der->izq);
+	}
+	return true;
 }
 
 const char *abb_iter_in_ver_actual(const abb_iter_t *iter){
-   return (char*)pila_ver_tope(iter->pila);
+   return (pila_esta_vacia(iter->pila)) ? NULL :(const char*)(((nodo_t *)pila_ver_tope(iter->pila))->clave);
 }
 
 bool abb_iter_in_al_final(const abb_iter_t *iter){
