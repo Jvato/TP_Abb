@@ -459,7 +459,7 @@ bool imprimir_5(const char* clave, void* dato, void* extra)
     int* contador = extra; 
     (*contador)++;
     printf("La clave es = %s y la cantidad de impresiones es = %i\n", clave, *contador);
-    if(*contador == 2){
+    if(*contador == 7){
         return false;
     }
     return true;
