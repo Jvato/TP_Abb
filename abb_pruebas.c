@@ -454,6 +454,46 @@ static void prueba_abb_iterar_interno()
     abb_destruir(abb);
 }
 
+bool imprimir_5(const char* clave, void* dato, void* extra)
+{   
+    int* contador = extra; 
+    (*contador)++;
+    printf("La clave es = %s y la cantidad de impresiones es = %i\n", clave, *contador);
+    if(*contador == 2){
+        return false;
+    }
+    return true;
+}
+
+
+static void prueba_abb_iterar_interno_imprimir()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+
+    char *clave1 = "n", *valor1 = "1";
+    char *clave2 = "e", *valor2 = "2";
+    char *clave3 = "d", *valor3 = "3";
+    char *clave4 = "b", *valor4 = "4";
+    char *clave5 = "h", *valor5 = "5";
+    char *clave6 = "o", *valor6 = "6";
+    char *clave7 = "t", *valor7 = "7";
+    char *clave8 = "z", *valor8 = "8";
+
+    print_test("Prueba abb insertar clave1", abb_guardar(abb, clave1, valor1));
+    print_test("Prueba abb insertar clave2", abb_guardar(abb, clave2, valor2));
+    print_test("Prueba abb insertar clave3", abb_guardar(abb, clave3, valor3));
+    print_test("Prueba abb insertar clave4", abb_guardar(abb, clave4, valor4));
+    print_test("Prueba abb insertar clave5", abb_guardar(abb, clave5, valor5));
+    print_test("Prueba abb insertar clave6", abb_guardar(abb, clave6, valor6));
+    print_test("Prueba abb insertar clave7", abb_guardar(abb, clave7, valor7));
+    print_test("Prueba abb insertar clave8", abb_guardar(abb, clave8, valor8));
+
+    int contador = 0;
+    abb_in_order(abb, imprimir_5, &contador);
+    
+    abb_destruir(abb);
+}
+
 bool imprimir_bicho(const char* clave, void* dato, void* extra)
 {
     if(strcmp(clave, "bicho") == 0){
@@ -487,12 +527,14 @@ static void prueba_abb_iterar_interno_con_tope()
     abb_destruir(abb);
 }
 
+
+
 /* ******************************************************************
  *                        FUNCIÓN PRINCIPAL
  * *****************************************************************/
 
 
-void pruebas_abb_catedra()
+void pruebas_abb_estudiante()
 {
     /* Ejecuta todas las pruebas unitarias. */
     prueba_crear_abb_vacio();
@@ -507,10 +549,15 @@ void pruebas_abb_catedra()
     prueba_abb_iterar();
     prueba_abb_iterar_volumen(5000);
     prueba_abb_iterar_interno();
+    prueba_abb_iterar_interno_imprimir();
     prueba_abb_iterar_interno_con_tope();
 }
 
-void pruebas_volumen_catedra(size_t largo)
-{
-    prueba_abb_volumen(largo, false);
+#ifndef CORRECTOR
+
+int main(void) {
+    pruebas_abb_estudiante();
+    return failure_count() > 0;
 }
+
+#endif
