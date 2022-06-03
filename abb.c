@@ -178,12 +178,30 @@ void abb_destruir(abb_t *arbol){
     free(arbol);
 }
 
-void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra){
+bool _abb_in_order(nodo_t* raiz, bool visitar(const char *, void *, void *), void *extra){
+	if (raiz == NULL) {
+		return true;
+	}
+	if (_abb_in_order(raiz->izq,visitar,extra) == false) {
+		return false;
+	}
+	if (visitar(raiz->clave,raiz->dato, extra) == false) {
+		return false;
+	}
+	if (_abb_in_order(raiz->der,visitar,extra) == false) {
+		return false;
+	}
+	return true;
+}
 
+
+void abb_in_order(abb_t *arbol, bool visitar(const char *, void *, void *), void *extra){
+    _abb_in_order(arbol->raiz, visitar, extra);
+    return;
 }
 
 struct abb_iter{
-   abb_t* arbol;
+   const abb_t* arbol;
    pila_t* pila;
 };
 
@@ -204,7 +222,7 @@ abb_iter_t *abb_iter_in_crear(const abb_t *arbol){
    if(iter == NULL){
        return NULL;
    }
-   iter->arbol = (abb_t *)arbol;
+   iter->arbol = arbol;
    iter->pila = pila_crear();
    if(iter->pila == NULL){
        free(iter);
@@ -219,15 +237,14 @@ bool abb_iter_in_avanzar(abb_iter_t *iter){
 		return false;
 	} 
 	else {
-		nodo_t *nodo_apilar = pila_desapilar(iter->pila);
-       		if (nodo_apilar->der == NULL ) {
-			return true;
-		}
-		nodo_apilar = nodo_apilar->der;
-		if (pila_apilar(iter->pila,nodo_apilar)== false) {
-			return false;
-		}
-		apilo_izq(iter,nodo_apilar);
+        nodo_t* nodo_desapilado = pila_desapilar(iter->pila);
+        if(nodo_desapilado->der == NULL){
+            return true;
+        }
+        if(!pila_apilar(iter->pila, nodo_desapilado->der)){
+            return false;
+        }
+        apilo_izq(iter, nodo_desapilado->der->izq);
 	}
 	return true;
 }
